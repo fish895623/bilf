@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	db "github.com/fish895623/bilf/database"
 	"github.com/fish895623/bilf/route"
 	T "github.com/fish895623/bilf/types"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -19,18 +19,6 @@ const (
 )
 
 var DBINFO = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
-var db *gorm.DB
-
-func DBInit() {
-	var err error
-
-	db, err = gorm.Open(postgres.Open(DBINFO), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database")
-	}
-	db.AutoMigrate(&T.Daily{})
-	db.AutoMigrate(&T.Tag{})
-}
 
 func SetupRouter() (e *gin.Engine) {
 	e = gin.New()
@@ -40,11 +28,18 @@ func SetupRouter() (e *gin.Engine) {
 	return
 }
 
+func SomeHandler(db *gorm.DB, fn *gin.Context) gin.HandlerFunc {
+	return gin.HandlerFunc(fn)
+}
+
 func main() {
 	gin.SetMode(gin.DebugMode)
 	e := SetupRouter()
-	DBInit()
-
+	db.DBInit()
+	var db *gorm.DB
+	e.GET("/a", SomeHandler(db, func(c *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"a": 1})
+	}))
 	route.RouterRoot(e, "/")
 
 	e.GET("/index/:id", func(c *gin.Context) {
