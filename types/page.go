@@ -1,12 +1,16 @@
 package bilf
 
-type Settings struct {
-	Database string
-}
+import (
+	"gorm.io/gorm"
+)
+
 type Tag struct {
-	Id   int
+	gorm.Model
+	Id   int `gorm:"primaryKey"`
 	Name string
 }
 type Daily struct {
-	Tag []int
+	gorm.Model
+	Id  int   `gorm:"primaryKey"`
+	Tag []int `gorm:"type:integer[]"`
 }
