@@ -37,6 +37,10 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
+	e.GET("/metrics", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"tags": 1})
+	})
+
 	e.GET("/index/:id", func(c *gin.Context) {
 		userid := c.Param("id")
 		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Hello?" + userid})
