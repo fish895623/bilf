@@ -1,4 +1,4 @@
-package bilf
+package types
 
 import (
 	"gorm.io/gorm"

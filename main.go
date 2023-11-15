@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
-	"os"
 
+	"github.com/fish895623/bilf/database"
+	"github.com/fish895623/bilf/route"
+	"github.com/fish895623/bilf/types"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -21,23 +23,25 @@ func SomeHandler(db *gorm.DB, fn func(*gin.Context)) gin.HandlerFunc {
 	return gin.HandlerFunc(fn)
 }
 
-
-var db *gorm.DB
+// NOTE Query about gorm https://gorm.io/docs/query.html
 
 func main() {
 	gin.SetMode(gin.DebugMode)
 	e := SetupRouter()
-	var err error
-	if db, err = gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{}); err != nil {
-		panic("Failed to connect to database")
-	}
-	e.GET("", SomeHandler(db, func(c *gin.Context) {
+	var as []types.Tag
+
+	database.DB.Find(&as)
+	fmt.Printf("%+v#n", as)
+
+	e.GET("", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	}))
+	})
 
 	e.GET("/index/:id", func(c *gin.Context) {
 		userid := c.Param("id")
 		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Hello?" + userid})
 	})
+	route.RouterRoot(e, "/")
+
 	e.Run()
 }
