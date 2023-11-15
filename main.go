@@ -1,21 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"os"
 
-	db "github.com/fish895623/bilf/database"
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-const (
-	DB_USER     = "postgres"
-	DB_PASSWORD = "1234"
-	DB_NAME     = "hhhh"
-)
-
-var DBINFO = fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
 
 func SetupRouter() (e *gin.Engine) {
 	e = gin.New()
@@ -29,13 +21,17 @@ func SomeHandler(db *gorm.DB, fn func(*gin.Context)) gin.HandlerFunc {
 	return gin.HandlerFunc(fn)
 }
 
+
+var db *gorm.DB
+
 func main() {
 	gin.SetMode(gin.DebugMode)
-	// e := SetupRouter()
-	e := gin.Default()
-	db.DBInit()
-	var db gorm.DB
-	e.GET("", SomeHandler(&db, func(c *gin.Context) {
+	e := SetupRouter()
+	var err error
+	if db, err = gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{}); err != nil {
+		panic("Failed to connect to database")
+	}
+	e.GET("", SomeHandler(db, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	}))
 
