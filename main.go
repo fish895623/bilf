@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/fish895623/bilf/route"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -22,13 +23,32 @@ func SomeHandler(db *gorm.DB, fn func(*gin.Context)) gin.HandlerFunc {
 	return gin.HandlerFunc(fn)
 }
 
-func DummyMiddleWare(c *gin.Context) {
-	fmt.Println("DummyMiddleWare")
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Cache-Control", "no-cache, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0")
-	c.Header("Last-Modified", time.Now().String())
-	c.Header("Expires", "-1")
-	c.Next()
+func DummyMiddleWare() gin.HandlerFunc {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Erro ao ler variaveis de ambiente")
+	}
+	requiredToken := os.Getenv("API_TOKEN")
+
+	if requiredToken == "" {
+		log.Fatal("Por favor, defina a variavel API_TOKEN")
+	}
+
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("api_token")
+
+		if token == requiredToken {
+			return
+		}
+		if token != requiredToken {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Token invalido"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+
 }
 
 // NOTE Query about gorm https://gorm.io/docs/query.html
@@ -37,8 +57,9 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	e := SetupRouter()
 
-	e.Use(DummyMiddleWare)
+	e.Use(DummyMiddleWare())
 	e.GET("", func(c *gin.Context) {
+		c.SetCookie("Access-Token", "123", 3600, "/", "localhost", false, true)
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	e.GET("/metrics", func(c *gin.Context) {
