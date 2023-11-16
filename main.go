@@ -24,14 +24,10 @@ func SomeHandler(db *gorm.DB, fn func(*gin.Context)) gin.HandlerFunc {
 }
 
 func DummyMiddleWare() gin.HandlerFunc {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Erro ao ler variaveis de ambiente")
-	}
 	requiredToken := os.Getenv("API_TOKEN")
 
 	if requiredToken == "" {
-		log.Fatal("Por favor, defina a variavel API_TOKEN")
+		log.Fatal("env API_TOKEN")
 	}
 
 	return func(c *gin.Context) {
@@ -54,6 +50,11 @@ func DummyMiddleWare() gin.HandlerFunc {
 // NOTE Query about gorm https://gorm.io/docs/query.html
 
 func main() {
+	var err error
+	if err = godotenv.Load(".env"); err != nil {
+		log.Println("Could not load .env file")
+	}
+
 	gin.SetMode(gin.ReleaseMode)
 	e := SetupRouter()
 
