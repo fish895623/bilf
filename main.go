@@ -1,54 +1,47 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 
+	"github.com/fish895623/bilf/handlers"
 	"github.com/fish895623/bilf/route"
+	"github.com/fish895623/bilf/templates"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gorm.io/gorm"
 )
 
 func SetupRouter() (e *gin.Engine) {
 	e = gin.New()
 	e.Use(gin.Logger())
 	e.Use(gin.Recovery())
-	e.LoadHTMLGlob("templates/*.html")
 	return
 }
 
-func SomeHandler(db *gorm.DB, fn func(*gin.Context)) gin.HandlerFunc {
-	return gin.HandlerFunc(fn)
+type CustomEngine struct {
+	e *gin.Engine
 }
 
-func DummyMiddleWare() gin.HandlerFunc {
-	requiredToken := os.Getenv("API_TOKEN")
-
-	if requiredToken == "" {
-		log.Fatal("env API_TOKEN")
-	}
-
-	return func(c *gin.Context) {
-		token := c.Request.Header.Get("api_token")
-
-		if token == requiredToken {
-			return
-		}
-		if token != requiredToken {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Token invalido"})
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-
+func (r CustomEngine) Routing() {
+	g := r.e.Group("/")
+	g.GET("/", func(c *gin.Context) {
+		var body templates.String
+		body.Str = `<h1>hello world</h1>`
+		body.Str += fmt.Sprintf(`<a href="https://google.com">%v</a>`, "google")
+		body.Header()
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(body.Str))
+	})
+	g.GET("/metrics", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"tags": 1})
+	})
+	g.GET("/index/:id", func(c *gin.Context) {
+		userid := c.Param("id")
+		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Hello?" + userid})
+	})
 }
 
 // NOTE Query about gorm https://gorm.io/docs/query.html
-
 func main() {
 	var err error
 	if err = godotenv.Load(".env"); err != nil {
@@ -58,19 +51,19 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	e := SetupRouter()
 
-	e.Use(DummyMiddleWare())
-	e.GET("", func(c *gin.Context) {
-		c.SetCookie("Access-Token", "123", 3600, "/", "localhost", false, true)
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-	e.GET("/metrics", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"tags": 1})
-	})
-	e.GET("/index/:id", func(c *gin.Context) {
-		userid := c.Param("id")
-		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Hello?" + userid})
+	CustomEngine{e}.Routing()
+	auth := e.Group("/auth")
+	auth.Use(handlers.DummyMiddleWare)
+	auth.Any("/auth", func(c *gin.Context) {
+		switch c.Request.Method {
+		case "GET":
+		case "POST":
+			c.JSON(http.StatusOK, gin.H{"asdf": "post"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"asdf": "asdf"})
 	})
 	route.RouterRoot(e, "/")
-
+	route.AuthRoute(e)
 	e.Run()
 }
