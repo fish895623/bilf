@@ -1,6 +1,7 @@
 package route
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,6 +21,13 @@ func testSetup() (r *gin.Engine, w *httptest.ResponseRecorder, req *http.Request
 
 func TestSetup(t *testing.T) {
 	_, w, _ := testSetup()
+	var d struct {
+		LowerCase string `json:"asdf"`
+	}
+	err := json.Unmarshal(w.Body.Bytes(), &d)
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "{\"asdf\":\"asdf\"}", w.Body.String())
+	assert.Equal(t, d.LowerCase, "asdf")
 }
