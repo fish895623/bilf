@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 func DummyMiddleWare(c *gin.Context) {
-	requiredToken := os.Getenv("API_TOKEN")
+	// requiredToken := os.Getenv("API_TOKEN")
+	requiredToken := "123456"
 
 	if requiredToken == "" {
 		log.Fatal("env API_TOKEN")
