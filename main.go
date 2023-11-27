@@ -6,5 +6,5 @@ import (
 
 // NOTE Query about gorm https://gorm.io/docs/query.html
 func main() {
-	route.Setup().Run()
+	route.Setup().Run(":8081")
 }
