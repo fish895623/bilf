@@ -31,3 +31,19 @@ func TestSetup(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, d.LowerCase, "asdf")
 }
+func TestPing(t *testing.T) {
+	r := Setup()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/ping", nil)
+	r.ServeHTTP(w, req)
+
+	var body struct {
+		Status     string `json:"status"`
+		DivPercent string `json:"DividendsPercentage"`
+	}
+
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 200, w.Code)
+}
