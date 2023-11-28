@@ -1,6 +1,7 @@
 package route
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -31,7 +32,7 @@ func TestSetup(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, d.LowerCase, "asdf")
 }
-func TestPing(t *testing.T) {
+func TestPingGet(t *testing.T) {
 	r := Setup()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/ping", nil)
@@ -46,4 +47,19 @@ func TestPing(t *testing.T) {
 		t.Error(err)
 	}
 	assert.Equal(t, 200, w.Code)
+}
+func TestPingPost(t *testing.T) {
+	var send_body struct {
+		Name string `json:"name"`
+	}
+
+	send_body.Name = "JEPI"
+
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(send_body)
+
+	r := Setup()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/ping", &buf)
+	r.ServeHTTP(w, req)
 }
