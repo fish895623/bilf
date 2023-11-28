@@ -1,11 +1,10 @@
 package route
 
 import (
-	"context"
 	"log"
 	"net/http"
 
-	"github.com/chromedp/chromedp"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,22 +18,17 @@ func (r CustomEngine) Routing() {
 		c.JSON(http.StatusOK, gin.H{"asdf": "asdf"})
 	})
 	g.GET("/ping", func(c *gin.Context) {
-		ctx, cancel := chromedp.NewContext(
-			context.Background(),
-		)
-		defer cancel()
-
-		// navigate to a page
-		var example string
-		err := chromedp.Run(ctx,
-			chromedp.Navigate(`https://finance.yahoo.com/quote/JEPI`),
-			chromedp.Text(`td[data-test="VTD_DTR-value"]`, &example),
-		)
+		req, err := http.Get("https://finance.yahoo.com/quote/JEPI")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(err.Error())
 		}
-		log.Println(example)
+		defer req.Body.Close()
 
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+		html, err := goquery.NewDocumentFromReader(req.Body)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "pong", "DividendsPercentage": html.Find(`td[data-test="YTD_DTR-value"]`).Text()})
 	})
 }
