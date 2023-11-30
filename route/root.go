@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
@@ -20,54 +21,42 @@ func (r CustomEngine) Routing() {
 	g.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"asdf": "asdf"})
 	})
-	g.GET("/ping", func(c *gin.Context) {
-		req, err := http.Get("https://finance.yahoo.com/quote/JEPI")
-		if err != nil {
-			log.Fatal(err.Error())
-			// TODO send error message when failed to connect
-			c.JSON(http.StatusOK, gin.H{
-				"status":       "failed",
-				"ErrorMessage": "Fail to get html", "log": err.Error(),
-			})
-		}
-		defer req.Body.Close()
+	g.Any("/ping", ANYPingStocks)
+}
+func ANYPingStocks(c *gin.Context) {
+	var req *http.Response
+	var html *goquery.Document
 
-		html, err := goquery.NewDocumentFromReader(req.Body)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"status":              "ok",
-			"DividendsPercentage": html.Find(`td[data-test="YTD_DTR-value"]`).Text(),
-		})
-	})
-	g.POST("/ping", func(c *gin.Context) {
+	if c.Request.Method == "GET" {
+		req = RequestingQuote("JEPI")
+	} else if c.Request.Method == "POST" {
 		body := c.Request.Body
 		val, _ := io.ReadAll(body)
 		var data struct {
 			Name string `json:"name"`
 		}
-
 		json.Unmarshal([]byte(val), &data)
-		log.Println(data.Name)
 
-		req, err := http.Get(fmt.Sprintf(`https://finance.yahoo.com/quote/%s`, data.Name))
-		// TODO send error message when failed to connect
-		if err != nil {
-			log.Fatal(err.Error())
-			c.JSON(http.StatusOK, gin.H{
-				"status":       "failed",
-				"ErrorMessage": "Fail to get html", "log": err.Error(),
-			})
-		}
-		defer req.Body.Close()
+		req = RequestingQuote(data.Name)
+	}
+	html, _ = goquery.NewDocumentFromReader(req.Body)
+	var data = html.Find(`td[data-test="YTD_DTR-value"]`).Text()
+	realData, _ := strconv.ParseFloat(strings.Replace(data, "%", "", -1), 64)
 
-		html, _ := goquery.NewDocumentFromReader(req.Body)
-
+	if data == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "error",
+			"error":  "invalid stock name",
+		})
+	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"status":              "ok",
-			"DividendsPercentage": html.Find(`td[data-test="YTD_DTR-value"]`).Text(),
+			"DividendsPercentage": realData,
 		})
-	})
+	}
+}
+
+func RequestingQuote(name string) (res *http.Response) {
+	res, _ = http.Get(fmt.Sprintf("https://finance.yahoo.com/quote/%s", name))
+	return
 }

@@ -3,6 +3,7 @@ package route
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,14 +40,17 @@ func TestPingGet(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	var body struct {
-		Status     string `json:"status"`
-		DivPercent string `json:"DividendsPercentage"`
+		Status     string  `json:"status"`
+		DivPercent float32 `json:"DividendsPercentage"`
 	}
 
 	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
 		t.Error(err)
 	}
+
+	log.Println(body.DivPercent)
 	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, body.DivPercent > 0, true)
 }
 func TestPingPost(t *testing.T) {
 	var send_body struct {
@@ -76,4 +80,11 @@ func Test_nil_ping_post(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/ping", &buf)
 	r.ServeHTTP(w, req)
+}
+
+func TestRequestingQuote(t *testing.T) {
+	res := RequestingQuote("JEPI")
+	if res.StatusCode != 200 {
+		t.Error("Fail to get html")
+	}
 }
