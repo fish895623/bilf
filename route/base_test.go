@@ -63,3 +63,17 @@ func TestPingPost(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/ping", &buf)
 	r.ServeHTTP(w, req)
 }
+
+func Test_nil_ping_post(t *testing.T) {
+	var send_body struct {
+		Name string `json:"name"`
+	}
+
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(send_body)
+
+	r := Setup()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/ping", &buf)
+	r.ServeHTTP(w, req)
+}

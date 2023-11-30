@@ -21,7 +21,7 @@ func (r CustomEngine) Routing() {
 		c.JSON(http.StatusOK, gin.H{"asdf": "asdf"})
 	})
 	g.GET("/ping", func(c *gin.Context) {
-		req, err := http.Get("https://finance.yahoo.com/quote/JEPII")
+		req, err := http.Get("https://finance.yahoo.com/quote/JEPI")
 		if err != nil {
 			log.Fatal(err.Error())
 			// TODO send error message when failed to connect
@@ -44,10 +44,7 @@ func (r CustomEngine) Routing() {
 	})
 	g.POST("/ping", func(c *gin.Context) {
 		body := c.Request.Body
-		val, err := io.ReadAll(body)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		val, _ := io.ReadAll(body)
 		var data struct {
 			Name string `json:"name"`
 		}
@@ -56,9 +53,9 @@ func (r CustomEngine) Routing() {
 		log.Println(data.Name)
 
 		req, err := http.Get(fmt.Sprintf(`https://finance.yahoo.com/quote/%s`, data.Name))
+		// TODO send error message when failed to connect
 		if err != nil {
 			log.Fatal(err.Error())
-			// TODO send error message when failed to connect
 			c.JSON(http.StatusOK, gin.H{
 				"status":       "failed",
 				"ErrorMessage": "Fail to get html", "log": err.Error(),
@@ -66,10 +63,7 @@ func (r CustomEngine) Routing() {
 		}
 		defer req.Body.Close()
 
-		html, err := goquery.NewDocumentFromReader(req.Body)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		html, _ := goquery.NewDocumentFromReader(req.Body)
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":              "ok",
