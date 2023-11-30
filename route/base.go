@@ -1,11 +1,8 @@
 package route
 
 import (
-	"log"
-
 	"github.com/fish895623/bilf/handlers"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func SetupMiddleWare(e *gin.Engine) {
@@ -19,9 +16,6 @@ func SetupRouter(e *gin.Engine) {
 
 func Setup() (e *gin.Engine) {
 	e = gin.New()
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println("Could not load .env file")
-	}
 	SetupMiddleWare(e)
 	SetupRouter(e)
 
