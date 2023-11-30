@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,6 +48,10 @@ func TestPingGet(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
 		t.Error(err)
 	}
+	Convey("Test Ping Get", t, func() {
+		So(body.Status, ShouldEqual, "ok")
+		So(body.DivPercent > 0, ShouldEqual, true)
+	})
 
 	log.Println(body.DivPercent)
 	assert.Equal(t, 200, w.Code)
