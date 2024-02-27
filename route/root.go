@@ -16,6 +16,22 @@ type CustomEngine struct {
 	E *gin.Engine
 }
 
+func SetupMiddleWare(e *gin.Engine) {
+	e.Use(gin.Logger())
+	e.Use(gin.Recovery())
+}
+func SetupRouter(e *gin.Engine) {
+	CustomEngine{E: e}.Routing()
+}
+
+func Setup() (e *gin.Engine) {
+	e = gin.New()
+	SetupMiddleWare(e)
+	SetupRouter(e)
+
+	return
+}
+
 func (r CustomEngine) Routing() {
 	g := r.E.Group("/")
 	g.GET("/", func(c *gin.Context) {
@@ -54,6 +70,19 @@ func ANYPingStocks(c *gin.Context) {
 			"DividendsPercentage": realData,
 		})
 	}
+}
+
+type Price struct {
+	High float64 `json:"high"`
+	Low  float64 `json:"low"`
+}
+
+type ResponseData struct {
+	Status              string  `json:"status"`
+	Today               Price   `json:"today"`
+	Week                Price   `json:"week"`
+	Year                Price   `json:"year"`
+	DividendsPercentage float64 `json:"DividendsPercentage"`
 }
 
 func RequestingQuote(name string) (res *http.Response) {

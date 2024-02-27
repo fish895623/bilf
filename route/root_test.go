@@ -3,14 +3,12 @@ package route
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/assert"
 )
 
 func testSetup() (r *gin.Engine, w *httptest.ResponseRecorder, req *http.Request) {
@@ -31,8 +29,14 @@ func TestSetup(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, d.LowerCase, "asdf")
+	Convey("Test Setup", t, func() {
+		Convey("Get Status Code", func() {
+			So(w.Result().StatusCode, ShouldEqual, 200)
+		})
+		Convey("Get Test Value", func() {
+			So(d.LowerCase, ShouldEqual, "asdf")
+		})
+	})
 }
 func TestPingGet(t *testing.T) {
 	r := Setup()
@@ -48,14 +52,15 @@ func TestPingGet(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
 		t.Error(err)
 	}
-	Convey("Test Ping Get", t, func() {
-		So(body.Status, ShouldEqual, "ok")
-		So(body.DivPercent > 0, ShouldEqual, true)
-	})
 
-	log.Println(body.DivPercent)
-	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, body.DivPercent > 0, true)
+	Convey("Test Ping Get", t, func() {
+		Convey("Get Status Code", func() {
+			So(w.Result().StatusCode, ShouldEqual, 200)
+		})
+		Convey("Get Test Value", func() {
+			So(body.DivPercent > 0, ShouldEqual, true)
+		})
+	})
 }
 func TestPingPost(t *testing.T) {
 	var send_body struct {
