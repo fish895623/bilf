@@ -37,10 +37,24 @@ func Setup() (e *gin.Engine) {
 
 func (r CustomEngine) Routing() {
 	g := r.E.Group("/")
-	g.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"asdf": "asdf"})
+	g.GET("/", CookieTool())
+	g.GET("/login", func(c *gin.Context) {
+		c.SetCookie("label", "ok", 3600, "/", "localhost", true, true)
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<a>Login</a>`))
 	})
-	g.Any("/ping", ANYPingStocks)
+}
+
+func CookieTool() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if cookie, err := c.Cookie("label"); err == nil {
+			if cookie == "ok" {
+				c.Next()
+				return
+			}
+		}
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden with no cookie"})
+		c.Abort()
+	}
 }
 func ANYPingStocks(c *gin.Context) {
 	var req *http.Response
