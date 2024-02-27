@@ -10,6 +10,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
+	"github.com/zsais/go-gin-prometheus"
 )
 
 type CustomEngine struct {
@@ -17,6 +18,8 @@ type CustomEngine struct {
 }
 
 func SetupMiddleWare(e *gin.Engine) {
+	r := ginprometheus.NewPrometheus("gin")
+	r.Use(e)
 	e.Use(gin.Logger())
 	e.Use(gin.Recovery())
 }
