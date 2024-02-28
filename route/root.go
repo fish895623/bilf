@@ -12,7 +12,7 @@ func SetupMiddleWare(e *gin.Engine) {
 	e.Use(Cookie())
 }
 
-func Setup() (e *gin.Engine) {
+func SetupRouter() (e *gin.Engine) {
 	e = gin.New()
 	SetupMiddleWare(e)
 	Routing(e)
@@ -27,8 +27,8 @@ func Routing(e *gin.Engine) {
 
 func SetCookies() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.SetCookie("label", "ok", 3600, "/", "localhost", true, true)
-		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<a>Login</a>`))
+		c.SetCookie("label", "ok", 3600, "/", "localhost", false, true)
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	}
 }
 
