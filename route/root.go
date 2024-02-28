@@ -8,42 +8,34 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
-	"github.com/zsais/go-gin-prometheus"
 )
 
-type CustomEngine struct {
-	E *gin.Engine
-}
-
 func SetupMiddleWare(e *gin.Engine) {
-	r := ginprometheus.NewPrometheus("gin")
-	r.Use(e)
 	e.Use(gin.Logger())
 	e.Use(gin.Recovery())
-}
-func SetupRouter(e *gin.Engine) {
-	CustomEngine{E: e}.Routing()
 }
 
 func Setup() (e *gin.Engine) {
 	e = gin.New()
 	SetupMiddleWare(e)
-	SetupRouter(e)
+	Routing(e)
 
 	return
 }
 
-func (r CustomEngine) Routing() {
-	g := r.E.Group("/")
+func Routing(e *gin.Engine) {
+	g := e.Group("/")
 	g.GET("/", CookieTool())
-	g.GET("/login", func(c *gin.Context) {
-		c.SetCookie("label", "ok", 3600, "/", "localhost", true, true)
-		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<a>Login</a>`))
-	})
+	g.GET("/login", SetCookies())
 }
 
+func SetCookies() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.SetCookie("label", "ok", 3600, "/", "localhost", true, true)
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(`<a>Login</a>`))
+	}
+}
 func CookieTool() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if cookie, err := c.Cookie("label"); err == nil {
